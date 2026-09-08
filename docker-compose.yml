@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chemgenie_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chemgenie
+      POSTGRES_PASSWORD: chemgenie
+      POSTGRES_DB: chemgenie
+    ports:
+      - "5432:5432"
+    volumes:
+      - chemgenie_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chemgenie -d chemgenie"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: chemgenie_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chemgenie_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://chemgenie:chemgenie@postgres:5432/chemgenie
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m scripts.seed_roles &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  chemgenie_pg_data:
