@@ -14,7 +14,17 @@ from typing import Optional
 import requests
 import streamlit as st
 
-DEFAULT_API_URL = os.environ.get("CHEMGENIE_API_URL", "http://localhost:8000")
+def _get_default_api_url() -> str:
+    # Ưu tiên st.secrets (cách Streamlit Cloud truyền secrets), sau đó mới tới biến môi trường.
+    try:
+        if "CHEMGENIE_API_URL" in st.secrets:
+            return st.secrets["CHEMGENIE_API_URL"]
+    except Exception:
+        pass
+    return os.environ.get("CHEMGENIE_API_URL", "http://localhost:8000")
+
+
+DEFAULT_API_URL = _get_default_api_url()
 
 st.set_page_config(page_title="ChemGenie API Tester", page_icon="🧪", layout="wide")
 
