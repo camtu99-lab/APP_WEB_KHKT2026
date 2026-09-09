@@ -32,8 +32,7 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    dockerCommand: >
-      sh -c "alembic upgrade head && python -m scripts.seed_roles && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    dockerCommand: sh start.sh
 
 databases:
   - name: chemgenie-db
