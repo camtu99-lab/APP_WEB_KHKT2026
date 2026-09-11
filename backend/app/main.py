@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import auth, users
+from app.api.v1 import auth, content, exams, questions, users
 from app.core.config import settings
 from app.core.exceptions import AppError
 
@@ -42,3 +42,7 @@ def health_check():
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(content.router)
+app.include_router(questions.router)
+app.include_router(exams.router)
+app.include_router(exams.attempts_router)
