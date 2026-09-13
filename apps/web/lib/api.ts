@@ -58,7 +58,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!res.ok) {
     const code = data?.error?.code || "UNKNOWN_ERROR";
-    const message = data?.error?.message || data?.detail || "Đã xảy ra lỗi, vui lòng thử lại.";
+    let message: string = data?.error?.message || "Đã xảy ra lỗi, vui lòng thử lại.";
+    // FastAPI validation errors (422) trả về "detail" là một MẢNG các lỗi, không phải chuỗi.
+    if (!data?.error?.message && data?.detail) {
+      if (Array.isArray(data.detail)) {
+        message = data.detail
+          .map((d: { msg?: string; loc?: unknown[] }) => d.msg || JSON.stringify(d))
+          .join("; ");
+      } else if (typeof data.detail === "string") {
+        message = data.detail;
+      }
+    }
     throw new ApiError(code, message, res.status);
   }
 
